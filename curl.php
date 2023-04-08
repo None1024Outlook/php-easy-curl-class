@@ -1,16 +1,14 @@
 <?php
 class Curl {
     public $ch;
-    public $headers;
-    public $cookie;
-    public $error;
-    public $response;
+    public $headers = array();
+    public $cookie = "";
+    public $error = false;
+    public $errormessage = "";
+    public $response = "";
+    public $httpcode = 0;
     function __construct() {
         $this->ch = curl_init();
-        $this->headers = array();
-        $this->cookie = "";
-        $this->error = array("error" => false, "message" => "");
-        $this->response = "";
     }
 
     /**
@@ -20,8 +18,7 @@ class Curl {
         $this->setUrl($url);
         // $this->setOpt(CURLOPT_POST, false);
         $this->response = curl_exec($this->ch);
-        $this->error["error"] = !(!curl_error($this->ch));
-        $this->error["message"] = curl_error($this->ch);
+        $this->getResInfo();
         curl_close($this->ch);
     }
 
@@ -34,9 +31,61 @@ class Curl {
         $this->setOpt(CURLOPT_POST, true);
         $this->setOpt(CURLOPT_POSTFIELDS, $data);
         $this->response = curl_exec($this->ch);
-        $this->error["error"] = !(!curl_error($this->ch));
-        $this->error["message"] = curl_error($this->ch);
+        $this->getResInfo();
         curl_close($this->ch);
+    }
+
+    /**
+     * @param string $url
+     * @param array $data
+     */
+    function put($url, $data=array()) {
+        $this->setUrl($url);
+        $this->setOpt(CURLOPT_CUSTOMREQUEST, "put");
+        $this->setOpt(CURLOPT_POSTFIELDS, $data);
+        $this->response = curl_exec($this->ch);
+        $this->getResInfo();
+        curl_close($this->ch);
+    }
+
+    /**
+     * @param string $url
+     * @param array $data
+     */
+    function patch($url, $data=array()) {
+        $this->setUrl($url);
+        $this->setOpt(CURLOPT_CUSTOMREQUEST, "patch");
+        $this->setOpt(CURLOPT_POSTFIELDS, $data);
+        $this->response = curl_exec($this->ch);
+        $this->getResInfo();
+        curl_close($this->ch);
+    }
+
+    /**
+     * @param string $url
+     * @param array $data
+     */
+    function delete($url, $data=array()) {
+        $this->setUrl($url);
+        $this->setOpt(CURLOPT_CUSTOMREQUEST, "delete");
+        $this->setOpt(CURLOPT_POSTFIELDS, $data);
+        $this->response = curl_exec($this->ch);
+        $this->getResInfo();
+        curl_close($this->ch);
+    }
+
+    function getError() {
+        $this->error = !(!curl_error($this->ch));
+        $this->errormessage = curl_error($this->ch);
+    }
+
+    function getHttpCode() {
+        $this->httpcode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+    }
+
+    function getResInfo() {
+        $this->getError();
+        $this->getHttpCode();
     }
 
     /**
@@ -45,6 +94,22 @@ class Curl {
      */
     function setOpt($option, $value) {
         curl_setopt($this->ch, $option, $value);
+    }
+
+    /**
+     * @param bool $value
+     */
+    function setFollowLocation($value) {
+        $this->setOpt(CURLOPT_FOLLOWLOCATION, $value);
+    }
+
+    /**
+     * @param string $httpUserName
+     * @param string $httpPassword
+     */
+    function setBasicAuthentication($httpUserName, $httpPassword) {
+        $this->setOpt(CURLOPT_HTTPAUTH, CURLAUTH_ANY);
+        $this->setOpt(CURLOPT_USERPWD, "$httpUserName:$httpPassword");
     }
 
     /**
@@ -87,12 +152,18 @@ class Curl {
     }
 
     /**
+     * @param string $UserAgent
+     */
+    function setUserAgent($UserAgent) {
+        $this->addHeader("user-agent", $UserAgent);
+    }
+
+    /**
      * @param array $headerArray
      */
     function addHeaderArray($headerArray) {
         foreach ($headerArray as $name=>$value) {
-            array_push($this->headers, "$name: $value");
-            $this->setHeader();
+            $this->addHeader($name, $value);
         }
     }
 
@@ -103,13 +174,48 @@ class Curl {
         $this->setOpt(CURLOPT_HTTPHEADER, $this->headers);
     }
 
+    function setCookie() {
+        $this->setOpt(CURLOPT_COOKIE, $this->cookie);
+    }
+
     /**
      * @param string $cookieName
      * @param string $cookieValue
      */
     function addCookie($cookieName, $cookieValue) {
-        $this->cookie += "$cookieName=$cookieValue;";
-        $this->setOpt(CURLOPT_COOKIE, $this->cookie);
+        $this->cookie = intval($this->cookie) . "$cookieName=$cookieValue";
+        $this->setCookie();
+    }
+
+    /**
+     * @param string $cookieString
+     */
+    function addCookieString($cookieString) {
+        $this->cookie = intval($this->cookie) . $cookieString;
+        $this->setCookie();
+    }
+
+    /**
+     * @param array $cookieArray
+     */
+    function addCookieArray($cookieArray) {
+        foreach ($cookieArray as $name=>$value) {
+            $this->addCookie($name, $value);
+        }
+    }
+
+    /**
+     * @param string $url
+     */
+    function getUrlCookie($url) {
+        $tmpCurl = new Curl();
+        $tmpCurl->setOpt(CURLOPT_RETURNTRANSFER, true);
+        $tmpCurl-> setOpt(CURLOPT_HEADER, true);
+        $tmpCurl->get($url);
+        preg_match_all('/^Set-Cookie: (.*?);/m', $tmpCurl->response,$tmp);
+        $tmpCookie = $tmp[1][0].';'.$tmp[1][1];
+        unset($tmpCurl);
+        return $tmpCookie;
     }
 
     /**
