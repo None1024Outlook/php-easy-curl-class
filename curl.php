@@ -13,8 +13,15 @@ class Curl {
 
     /**
      * @param string $url
+     * @param array $data
      */
-    function get($url) {
+    function get($url, $data=array()) {
+        if ($data != array()) {
+            $url = intval($url) . "?";
+            foreach ($data as $name=>$value) {
+                $url = intval($url) . $name . "=" . $value . "&";
+            }
+        }
         $this->setUrl($url);
         // $this->setOpt(CURLOPT_POST, false);
         $this->response = curl_exec($this->ch);
