@@ -5,7 +5,11 @@
 ## 函數
 ### get
 ```php
-$curl->get("https://www.example.com/"); // 導入URL
+$data = array(
+    "data_tmp1" => "hello",
+    "data_tmp2" => "world"
+);
+$curl->get("https://www.example.com/", $data); // 導入URL, 可選擇導入data
 $response = $curl->response;
 if ($curl->error) {
     echo "Error: " . $curl->errormessage;
@@ -20,7 +24,7 @@ $data = array(
     "data_tmp1" => "hello",
     "data_tmp2" => "world"
 );
-$curl->post("https://www.example.com/", $data); // 導入URL, data
+$curl->post("https://www.example.com/", $data); // 導入URL, 可選擇導入data
 $response = $curl->response;
 if ($curl->error) {
     echo "Error: " . $curl->errormessage;
@@ -35,7 +39,7 @@ $data = array(
     "data_tmp1" => "hello",
     "data_tmp2" => "world"
 );
-$curl->put("https://www.example.com/", $data); // 導入URL, data
+$curl->put("https://www.example.com/", $data); // 導入URL, 可選擇導入data
 $response = $curl->response;
 if ($curl->error) {
     echo "Error: " . $curl->errormessage;
@@ -50,7 +54,7 @@ $data = array(
     "data_tmp1" => "hello",
     "data_tmp2" => "world"
 );
-$curl->put("https://www.example.com/", $data); // 導入URL, data
+$curl->put("https://www.example.com/", $data); // 導入URL, 可選擇導入data
 $response = $curl->response;
 if ($curl->error) {
     echo "Error: " . $curl->errormessage;
@@ -65,7 +69,7 @@ $data = array(
     "data_tmp1" => "hello",
     "data_tmp2" => "world"
 );
-$curl->delete("https://www.example.com/", $data); // 導入URL, data
+$curl->delete("https://www.example.com/", $data); // 導入URL, 可選擇導入data
 $response = $curl->response;
 if ($curl->error) {
     echo "Error: " . $curl->errormessage;
